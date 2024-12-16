@@ -1,0 +1,127 @@
+
+# Generate list of re-wired graphs
+
+```{r}
+
+library(data.table)
+library(igraph)
+library(Matrix)
+
+graph.tbl <- fread("FIsInGene_070323_with_annotations.txt")[Score > .95]
+fi.graph <- graph_from_data_frame(as.data.frame(graph.tbl), directed=F)
+    
+load("reactome_fi_graph.RData")#orig.graph
+
+#make random graphs
+
+##approach and p-value from (RDPN) https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00004/full
+rand.graph.list <- lapply(1:1000, function(i){
+    
+    message(i)
+        
+    #rewire the edges while preserving the original graph's degree distribution
+    rw.tmp <- rewire(fi.graph, with=keeping_degseq(niter=100*length(E(fi.graph))))
+    
+    #limit to largest connected component
+    tmp.comps <- groups(components(rw.tmp))
+    largest.comp <- which.max(sapply(tmp.comps, length))
+    tmp.graph <- induced_subgraph(rw.tmp, V(rw.tmp)[name %in% tmp.comps[[largest.comp]]])
+    
+    tmp.graph
+})
+        
+save(rand.graph.list, file="hnscc_graphs_netprop.RData")
+
+```
+
+# Compute the network propagation (RWR) scores and P-values
+
+```{r}
+
+library(igraph)
+library(Matrix)
+library(data.table)
+
+source("R/integration.R")
+
+load("reactome_fi_graph.RData")#orig.graph
+load("hnscc_graphs_netprop.RData")#rand.graph.list
+
+#get the full graph again to set up the universe
+graph.tbl <- fread("FIsInGene_070323_with_annotations.txt")[Score > .95,]
+fi.graph <- graph_from_data_frame(as.data.frame(graph.tbl), directed=F)
+
+#get the gene scores and split by patient
+result.tbl <- fread("hnscc_inh_gene_scores.txt")
+
+result.tbl <- result.tbl[level == best_level,]
+
+pt.list <- split(result.tbl, by="lab_id")
+    
+#initital run
+
+inh.res <- matrix(0, nrow=length(V(fi.graph)), ncol=length(pt.list), dimnames=list(V(fi.graph)$name, names(pt.list)))
+    
+for(pt in names(pt.list)){
+    
+    tmp.pt <- pt.list[[pt]][Gene %in% V(orig.graph)$name]
+    
+    if (nrow(tmp.pt) > 0){
+        tmp.res <- run.rwr(orig.graph, tmp.pt$Gene, c.val=.7)
+        
+        inh.res[names(tmp.res),pt] <- tmp.res
+    }
+}
+        
+count.inh <- matrix(0, nrow=length(V(fi.graph)), ncol=length(pt.list), dimnames=list(V(fi.graph)$name, names(pt.list)))
+total.inh <- matrix(0, nrow=length(V(fi.graph)), ncol=length(pt.list), dimnames=list(V(fi.graph)$name, names(pt.list)))
+    
+#approach and p-value from (RDPN) https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2019.00004/full
+for(i in seq_along(rand.graph.list)){
+    
+    message(i)
+    
+    tmp.graph <-rand.graph.list[[i]]
+    
+    for(pt in names(pt.list)){
+        
+        tmp.pt <- pt.list[[pt]][Gene %in% V(tmp.graph)$name,]
+        
+        if (nrow(tmp.pt) > 0){
+            tmp.res <- run.rwr(tmp.graph, tmp.pt$Gene, c.val=.7)
+            
+            #compute the numerator
+            count.inh[names(tmp.res),pt] <- count.inh[names(tmp.res),pt] + as.numeric(tmp.res > inh.res[names(tmp.res),pt])
+            
+            #compute the denominator
+            total.inh[names(tmp.res),pt] <- total.inh[names(tmp.res),pt] + 1
+        }
+    }
+}
+    
+init.tbl <- tidyr::pivot_longer(tibble::as_tibble(inh.res, rownames="Gene"), cols=-Gene, names_to="lab_id", values_to="np_score")
+count.tbl <- tidyr::pivot_longer(tibble::as_tibble(count.inh, rownames="Gene"), cols=-Gene, names_to="lab_id", values_to="np_count")
+total.tbl <- tidyr::pivot_longer(tibble::as_tibble(total.inh, rownames="Gene"), cols=-Gene, names_to="lab_id", values_to="np_total")
+
+init.tbl <- dplyr::inner_join(init.tbl, count.tbl, by=c("lab_id", "Gene"))
+init.tbl <- dplyr::inner_join(init.tbl, total.tbl, by=c("lab_id", "Gene"))
+
+init.tbl <- dplyr::mutate(init.tbl, 
+                   np_pval=(np_count + 1) / (np_total + 1)
+                   )
+
+#merge in the information on the seeds used
+
+final.tbl <- merge(result.tbl[Gene %in% V(orig.graph)$name,.(Gene, lab_id=as.character(lab_id), is_seed=T)], as.data.table(init.tbl), by=c("Gene", "lab_id"), all=T)
+
+final.tbl[is.na(is_seed), is_seed:=F]
+
+#finally add in information on degree of the original graph
+
+fi.deg <- as.data.table(degree(fi.graph), keep.rownames=T)
+
+final.tbl <- merge(final.tbl, fi.deg[,.(Gene=V1, degree=V2)], by="Gene", all.x=T)
+
+fwrite(final.tbl, file="hnscc_netprop_results.txt", sep="\t", col.names=T)
+
+```
