@@ -9,6 +9,14 @@ source("R/alterations.R")
 source("R/clinical.R")
 source("R/gdsc_comparison.R")
 
+if (dir.exists("outputs") == F){
+    dir.create("outputs")
+}
+
+if (dir.exists("figures") == F){
+    dir.create("figures")
+}
+
 list(
     
     #data files
@@ -96,11 +104,9 @@ list(
         format = "file"
     ),
     
-    ## available upon request due to size
-    
     tar_target(
         tcga_hnscc_exprs_file,
-        "data/tcga_plus_hnscc_exprs.txt",
+        "data/tcga_plus_hnscc_exprs.txt.gz",
         format = "file"
     ),
     
