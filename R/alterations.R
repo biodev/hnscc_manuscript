@@ -196,6 +196,9 @@ proc.gdsc.assoc.genes <- function(drug.assoc.file, drug.map) {
 #' @param mut.tbl A `tibble` containing the following columns:
 #'   `lab_id`-- Patient sample identifier
 #'   `Gene`-- Gene symbol
+#' @param tcga.mut.freq.file An Excel file containing gene frequency info:
+#'   `gene_name` -- Gene symbol
+#'   `freq` -- Character values indicating frequencies (i.e. '10%')
 #' @param clin A `tibble` containing clinical information with columns:
 #'   `lab_id` -- Patient sample identifier
 #'   `Smoking_Status` -- Smoker vs Non-smoker
@@ -204,7 +207,7 @@ proc.gdsc.assoc.genes <- function(drug.assoc.file, drug.map) {
 #' @param gene.list Character vector of gene symbols that should overlap with the
 #'   `Gene` values in `mut.tbl`
 #' @returns a PDF: 'figures/hnscc_mut_oncoprint.pdf'
-make.mut.oncoprint <- function(mut.tbl, clin, gene.list) {
+make.mut.oncoprint <- function(mut.tbl, tcga.mut.freq.file, clin, gene.list) {
   mut.tbl <- mutate(mut.tbl, class_fac = factor(variant_classification,
     levels = .mutation.order, ordered = T
   ))
@@ -267,21 +270,7 @@ make.mut.oncoprint <- function(mut.tbl, clin, gene.list) {
     gp = gpar(col = "black")
   )
 
-  # from Figure 2 https://pmc.ncbi.nlm.nih.gov/articles/PMC4311405/#MOESM115
-  tcga.mut.freq <- tribble(
-    ~gene_name, ~freq,
-    "CDKN2A", "22%",
-    "FAT1", "23%",
-    "TP53", "72%",
-    "CASP8", "9%",
-    "AJUBA", "6%",
-    "PIK3CA", "21%",
-    "NOTCH1", "19%",
-    "KMT2D", "18%",
-    "NSD1", "10%",
-    "HLA-A", "3%",
-    "TGFBR2", "4%"
-  ) %>%
+  tcga.mut.freq <- readxl::read_excel(tcga.mut.freq.file) %>%
     {
       setNames(.$freq, .$gene_name)
     }

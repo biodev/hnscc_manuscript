@@ -86,6 +86,10 @@ list(
     tcga_driver_cnas_file,
     "data/putative_drivers_tcga_gistic_regions.xlsx"
   ),
+  tar_target(
+    tcga_mut_freq_file,
+    "data/tcga_mut_freq.xlsx"
+  ),
 
   ## combined and batch corrected version of TGCA-HNSC (from GDC) and HNSCC
 
@@ -137,6 +141,7 @@ list(
   tar_target(
     mut_driver_oncoprint,
     make.mut.oncoprint(mut_data,
+      tcga_mut_freq_file,                 
       clin = clin_data,
       gene.list = tcga_driver_muts$Gene
     ),
