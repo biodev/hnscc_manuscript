@@ -94,6 +94,59 @@ make.inhib.table <- function(inhib) {
   "outputs/inhibitor_table.xlsx"
 }
 
+#' Read and format the PanCan Oncogenic Signalling Pathways
+#'
+#' Reads the pathways from the Supplementary Data Excel file and compares them
+#' to Entrez gene symbols only keeping those that are direct matches.
+#'
+#' @param pancan.pathway.excel Table S3 from https://doi.org/10.1016/j.cell.2018.03.035
+#' @param gene.info.file Human gene info file from Entrez
+#' @returns A `tibble` with three columns for 'pathway' and 'Gene'
+form.pancan.pathways <- function(pancan.pathway.excel, gene.info.file) {
+  gene.info <- readr::read_delim(gene.info.file) %>%
+    filter(`#tax_id` == 9606)
+
+  tabs <- getSheetNames(pancan.pathway.excel)
+  tabs <- tabs[1:10]
+
+  path.tbl <- bind_rows(lapply(setNames(tabs, tabs), function(x) {
+    message(x)
+
+    # the first tab is different than the others
+    if (x == tabs[1]) {
+      as_tibble(read.xlsx(pancan.pathway.excel, sheet = x, startRow = 3)) %>%
+        select(Gene)
+    } else {
+      as_tibble(read.xlsx(pancan.pathway.excel, sheet = x)) %>%
+        select(Gene)
+    }
+  }), .id = "pathway")
+
+  # only keep those genes where there is a match (NOV is ambiguous)
+  path.tbl.m <- inner_join(
+    path.tbl,
+    select(gene.info, GeneID, Gene = Symbol),
+    by = "Gene"
+  )
+
+  # check to make sure there were no duplicates (genes or gene ids)
+  select(path.tbl.m, Gene, GeneID) %>%
+    unique() %>%
+    summarize(n = n(), .by = c("Gene")) %>%
+    {
+      stopifnot(all(.$n == 1))
+    }
+
+  select(path.tbl.m, Gene, GeneID) %>%
+    unique() %>%
+    summarize(n = n(), .by = c("GeneID")) %>%
+    {
+      stopifnot(all(.$n == 1))
+    }
+
+  select(path.tbl.m, pathway, Gene)
+}
+
 #' Compute Gene Scores and Permutation P-values
 #'
 #' Given a drug x patient matrix of Zscores D and a gene x drug binary matrix T
@@ -102,7 +155,6 @@ make.inhib.table <- function(inhib) {
 #' P-values are produced by counting the number of permuted gene scores that are
 #' greater than the original.  The P-values are then categorized into levels
 #' per patient sample and the corresponding categories are added to the result.
-#' Note that currently the seed is internally fixed for reproducibility.
 #'
 #' @param score.mat A drug x patient matrix as produced by `drug.by.pt.mat`
 #' @param tome.mat A gene x drug matrix as produced by `gene.by.drug.mat`
@@ -125,7 +177,7 @@ compute.gene.scores <- function(score.mat, tome.mat) {
 
   # compute permutation p-values
 
-  set.seed(4925225)
+  #set.seed(4925225)
 
   perm.mat <- lapply(1:1000, function(perm) {
     tmp.inhibs <- sample(rownames(score.mat))
