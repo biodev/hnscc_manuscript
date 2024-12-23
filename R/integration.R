@@ -564,7 +564,7 @@ steiner.tree <- function(g, term.nodes, r = 10, summarize.by = c("union", "min")
     use.tree <- seq_along(tree.list)
   }
 
-  do.call(union, tree.list[use.tree])
+  do.call(igraph::union, tree.list[use.tree])
 }
 
 .do.steiner.tree <- function(g, term.nodes, choose.single.sp = F, verbose = F) {
@@ -612,8 +612,8 @@ steiner.tree <- function(g, term.nodes, r = 10, summarize.by = c("union", "min")
       } else {
         iter.sps <- cur.sps$res
       }
-
-      tmp.sp.graph <- do.call(union, lapply(iter.sps, function(j) {
+      
+      tmp.sp.graph <- lapply(iter.sps, function(j) {
         # create a graph object from the shortest path results by ensuring
         # proper format: a->b b->c as opposed to a->b->c
         tmp.adj.l <- do.call(c, lapply(1:(length(j) - 1), function(k) {
@@ -621,10 +621,17 @@ steiner.tree <- function(g, term.nodes, r = 10, summarize.by = c("union", "min")
         }))
 
         subgraph_from_edges(g, eids = E(g, P = tmp.adj.l, directed = F), delete.vertices = TRUE)
-      }))
+      })
+      
+      if (length(tmp.sp.graph) == 1){
+        tmp.sp.graph[[1]]
+      }else{
+        do.call(igraph::union, tmp.sp.graph)
+      }
+      
     })
-
-    working.graph <- do.call(union, append(sp.graphs, list(working.graph)))
+    
+    working.graph <- do.call(igraph::union, append(sp.graphs, list(working.graph)))
 
     iter <- iter + 1
   }
@@ -693,9 +700,7 @@ make.graph.figure.by.pt <- function(fi.graph, np.alts, pt.id, top.n) {
     head(n = top.n)
 
   seed.genes <- filter(np.alts, lab_id %in% pt.id & is_seed == T)
-
-  set.seed(12525225)
-
+  
   sub.graph <- steiner.tree(fi.graph,
     term.nodes = union(keep.targs$Gene, seed.genes$Gene),
     r = 10,
@@ -711,7 +716,7 @@ make.graph.figure.by.pt <- function(fi.graph, np.alts, pt.id, top.n) {
   )
 
   # data frame representation to simplify annotating
-  graph.list <- as_data_frame(sub.graph, what = c("both"))
+  graph.list <- igraph::as_data_frame(sub.graph, what = c("both"))
 
   node.df <- inner_join(graph.list$vertices,
     select(all.genes, name = Gene, combined_class),
