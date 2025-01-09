@@ -541,13 +541,13 @@ make.expression.plot <- function(exprs, subtypes, centroid.mat) {
   graph.dims <- inner_join(graph.dims, subtypes, by = "file_id")
 
   p1 <- ggplot(data = graph.dims, mapping = aes(x = Dim1, y = Dim2)) +
-    geom_point(size = 3, mapping = aes(color = subtype_best, alpha = call != "IND")) +
+    geom_point(size = 3, mapping = aes(fill = subtype_best, alpha = call != "IND"), shape=21) +
     geom_point(data = filter(graph.dims, is_hnscc == T), size = 1, color = "black") +
-    scale_color_discrete(name = "Subtype") +
+    scale_fill_discrete(name = "Subtype") +
     scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = .25), guide = "none") +
     theme_bw()
 
-  ggsave(p1, file = "figures/expression_umap.pdf", width = 5, height = 3)
+  ggsave(p1, file = "figures/expression_umap.pdf", width = 4, height = 3)
 
   "figures/expression_umap.pdf"
 }

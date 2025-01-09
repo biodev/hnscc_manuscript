@@ -296,7 +296,7 @@ make.mut.oncoprint <- function(mut.tbl, tcga.mut.freq.file, clin, gene.list) {
     alter_fun_is_vectorized = FALSE, show_column_names = T
   )
 
-  pdf(file = "figures/hnscc_mut_oncoprint.pdf", width = 9, height = 3)
+  pdf(file = "figures/hnscc_mut_oncoprint.pdf", width = 8.5, height = 3)
 
   draw(ht)
 
@@ -367,7 +367,7 @@ make.cna.oncoprint <- function(cna.tbl, clin, tcga.cna.tbl, gene.list) {
     mutate(Smoking_Status = ifelse(Smoking_Status == "Lifelong Non-smoker", "Non-smoker", "Smoker")) %>%
     select(lab_id,
       `Disease Site` = Disease_Site, `Smoking Status` = Smoking_Status,
-      `HPV_Status` = HPV_Status
+      `HPV Status` = HPV_Status
     ) %>%
     as.data.frame()
   rownames(use.clin) <- use.clin$lab_id
@@ -418,7 +418,7 @@ make.cna.oncoprint <- function(cna.tbl, clin, tcga.cna.tbl, gene.list) {
     alter_fun_is_vectorized = FALSE, show_column_names = T
   )
 
-  pdf(file = "figures/hnscc_cna_oncoprint.pdf", width = 5, height = 4)
+  pdf(file = "figures/hnscc_cna_oncoprint.pdf", width = 4.5, height = 4)
 
   draw(ht)
 
