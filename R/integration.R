@@ -159,13 +159,14 @@ plot.gs.summary <- function(gs.tbl, use.genes) {
   p1 <- ggplot(data = use.gs.tbl, mapping = aes(x = sample_fac, y = gene_fac, fill = level_fac)) +
     geom_tile(color = "black") +
     scale_fill_viridis_d(option = "G", direction = -1, name = "Sig. Category", begin = .25) +
-    geom_text(mapping = aes(label = combined_class, color = -log10(pval) > 2)) +
+    geom_text(mapping = aes(label = combined_class, color = -log10(pval) > 2), size=3) +
     scale_color_manual(values = c(`TRUE` = "white", `FALSE` = "black"), guide = "none") +
     theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
     xlab("") +
     ylab("")
 
-  ggsave(p1, file = "figures/tcga_actionable_gs.pdf", width = 7, height = 4)
+  ggsave(p1, file = "figures/tcga_actionable_gs.pdf", width = 5, height = 2.75)
 
   "figures/tcga_actionable_gs.pdf"
 }
@@ -183,8 +184,11 @@ plot.gs.summary <- function(gs.tbl, use.genes) {
 #' @param score.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
 #' @param inhib.map A `tibble` containing a column for `inhibitor` and
 #'   one for the corresponding `plot_name`
+#' @param file.pref Prefix of the output pdf (default 'all')
+#' @param file.width Width in inches of the output pdf
+#' @param file.height Height in inches of the output pdf
 #' @returns A PDF 'figures/hnscc_response_cards.pdf'
-plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map) {
+plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map, file.pref="all", file.width=7, file.height=6) {
   gs.alt.tbl <- filter(gs.alt.tbl, is.na(score) == F)
 
   # order patients from most significant to least
@@ -196,16 +200,16 @@ plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map)
 
   pt.list <- pt.list[pt.stars$lab_id]
 
-  pdf(file = "figures/hnscc_response_cards.pdf", width = 7, height = 6)
+  pdf(file = paste0("figures/",file.pref,"_response_cards.pdf"), width = file.width, height = file.height)
 
   for (pt_idx in seq_along(pt.list)) {
     message(names(pt.list)[pt_idx])
-    plot.response.card(pt.list[[pt_idx]], htome.mat, score.mat, inhib.map)
+    plot.response.card(pt.list[[pt_idx]], htome.mat, score.mat, inhib.map, file.width, file.height)
   }
 
   dev.off()
 
-  "figures/hnscc_response_cards.pdf"
+  paste0("figures/",file.pref,"_response_cards.pdf")
 }
 
 #' Plot a Response Card
@@ -221,7 +225,9 @@ plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map)
 #' @param score.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
 #' @param inhib.map A `tibble` containing a column for `inhibitor` and
 #'   one for the corresponding `plot_name`
-plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
+#' @param expected.height Expected plot width in inches (used for scaling the various plot components)
+#' @param expected.height Expected plot height in inches (used for scaling the various plot components)
+plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map, expected.width, expected.height) {
   cur.samp <- result.tbl$lab_id[1]
 
   # include target genes for drugs < -2
@@ -296,7 +302,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
 
   ha <- HeatmapAnnotation(
     `Inhibitor Zscore` = anno_barplot(tmp.inhib),
-    height = unit(3, "cm")
+    height = unit((1/6)*expected.height, "inches")#was 3 cm
   )
 
   hl <- rowAnnotation(
@@ -304,7 +310,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
       ylim = c(score.ylim, max(0, max(sig.results$score))),
       gp = gpar(fill = "grey")
     ),
-    width = unit(2, "cm")
+    width = unit(.125*expected.height, "inches")#was 2 cm
   )
 
   hr.list <- list()
@@ -316,7 +322,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
   if (all(is.na(result.tbl$mut)) == F) {
     hr.list <- c(hr.list, rowAnnotation(
       Mutation = anno_simple(sig.results$mut, col = c(yes = "black", no = "white"), gp = gpar(col = "black")),
-      gap = unit(10, "mm"), annotation_name_rot = 90
+      annotation_name_rot = 90#was gap = unit((1/3)*expected.height, "inches") 10mm
     ))
   }
 
@@ -326,7 +332,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
 
     hr.list <- c(hr.list, rowAnnotation(
       `RPPA Zscore` = anno_barplot(sig.results$rppa_z,
-        ylim = rppa.ylim, width = unit(1, "cm"),
+        ylim = rppa.ylim, width = unit(.05*expected.width, "inches"),#unit(1, "cm"),
         gp = gpar(fill = ifelse(sig.results$rppa_z > 0, "red", "blue"))
       ),
       annotation_name_rot = 90
@@ -342,7 +348,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
 
     hr.list <- c(hr.list, rowAnnotation(
       `Exprs Zscore` = anno_barplot(sig.results$exprs_z,
-        ylim = exprs.ylim, width = unit(1, "cm"),
+        ylim = exprs.ylim, width = unit(.05*expected.width, "inches"),
         gp = gpar(fill = ifelse(sig.results$exprs_z > 0, "red", "blue"))
       ),
       annotation_name_rot = 90
@@ -357,7 +363,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
     hr.list <- c(hr.list, rowAnnotation(
       CNV = anno_barplot(sig.results$cent_cna,
         gp = gpar(fill = ifelse(sig.results$cent_cna > 0, "red", "blue")),
-        width = unit(1, "cm")
+        width = unit(.05*expected.width, "inches")
       ),
       annotation_name_rot = 90
     ))
@@ -366,7 +372,7 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
   hr.obj <- do.call(c, hr.list)
 
   if (length(hr.list) > 0) {
-    hr.obj@gap <- rep(unit(2, "mm"), length(hr.obj) + 1)
+    hr.obj@gap <- rep(unit(.01*expected.width, "inches"), length(hr.obj) + 1)#was unit(2, "mm")
   }
 
   if (nrow(tmp.mat) > 15) {
@@ -379,10 +385,11 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map) {
     rect_gp = gpar(col = "darkgrey"), col = circlize::colorRamp2(breaks = c(0, 1), colors = c("white", "black")),
     cluster_columns = F, cluster_rows = F, top_annotation = ha, left_annotation = hl, right_annotation = hr.obj, column_names_gp = gpar(cex = .5),
     column_names_side = "top", show_heatmap_legend = F, column_title = paste("Sample:", cur.samp, "sig-level:", sig.results$best_level[1]),
-    row_names_max_width = unit(30, "cm"), row_names_gp = gpar(cex = row.cex), row_names_side = "left"
+    row_names_max_width = unit((1/6)*expected.width,"inches"), row_names_gp = gpar(cex = row.cex), row_names_side = "left" #was unit(30, "cm")
   )
 
-  draw(ht, padding = unit(c(2, 20, 2, 20), "mm"))
+  draw(ht, padding = unit(c(.01*expected.width, .1*expected.width, .01*expected.width, .1*expected.width), "inches"))
+  #padding = bottom, left, top and right
 
   if (has.rppa == T) {
     decorate_annotation("RPPA Zscore", {
@@ -469,8 +476,9 @@ run.rwr <- function(i.graph, seed.prots, c.val = .7) {
 #' @param np.tbl A combined `tibble` of RWR scores and P-values and alterations
 #'   as generated by [combine.gs.mut.cna.exprs.rppa()].  In addition it should
 #'   have a column for RDPN P-value as `np_pval`.
+#' @param file.pref Prefix for the output PDF (default 'all')
 #' @results A PDF 'figures/net_prop_results.pdf'
-plot.network.prop.bars <- function(np.tbl) {
+plot.network.prop.bars <- function(np.tbl, file.pref="all") {
   np.tbl <- filter(
     np.tbl,
     combined_class %in% c("pA", "pD", "") == F &
@@ -492,15 +500,16 @@ plot.network.prop.bars <- function(np.tbl) {
 
     ggplot(data = tmp.x, mapping = aes(x = gene_fac, y = np_score, fill = mut_type)) +
       geom_col(color = "black") +
-      scale_fill_manual(values = c(Mut = "purple", Amp = "red", Del = "blue"), name = "Alteration Type") +
-      geom_text(mapping = aes(label = combined_class, y = np_score + (max(np_score) * .05))) +
+      scale_fill_manual(values = c(Mut = "purple", Amp = "red", Del = "blue"), guide="none") +
+      geom_text(mapping = aes(label = combined_class, y = np_score + (max(np_score) * .1))) +
       theme_bw() +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
       xlab("") +
       ylab("Network Propagation Score") +
       ggtitle(x$lab_id[1])
   })
 
-  pdf("figures/net_prop_results.pdf", width = 7.5, height = 2.5)
+  pdf(paste0("figures/", file.pref, "_net_prop_results.pdf"), width = 4.5, height = 2.5)
 
   for (p in seq_along(plot.list)) {
     show(plot.list[[p]])

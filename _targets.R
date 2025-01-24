@@ -456,6 +456,13 @@ list(
     packages = c("tidyverse", "ggplot2"),
     format = "file"
   ),
+  
+  tar_target(
+    example_net_prop_barplots,
+    plot.network.prop.bars(dplyr::filter(net_prop_alt_tbl, lab_id == "10058"), file.pref="pt10058"),
+    packages = c("tidyverse", "ggplot2"),
+    format = "file"
+  ),
 
   ## Gene Score summary
 
@@ -468,6 +475,18 @@ list(
 
   ## Response Cards
 
+  tar_target(
+    example_response_cards_plot,
+    plot.all.response.cards(
+      dplyr::filter(net_prop_alt_tbl, lab_id == "10058"),
+      trgome_mat, inhib_mat_list$`single-agent`,
+      unique(dplyr::select(inhib, inhibitor, plot_name)),
+      file.pref="pt10058", file.width=5, file.height=4
+    ),
+    packages = c("ComplexHeatmap", "tidyverse"),
+    format = "file"
+  ),
+  
   tar_target(
     all_response_cards_plot,
     plot.all.response.cards(

@@ -385,6 +385,11 @@ plot.hnscc.cl.inh <- function(cl.matches, pt.inhib, gdsc.inhib, cl.info) {
     drug.matches,
     by = "gdsc_id"
   )
+  
+  drug.matches <- mutate(drug.matches,
+                         lab_id = paste("Patient:", lab_id),
+                         model_name = paste("Cell Line:", model_name)
+  )
 
   dm.cors <- summarize(drug.matches, broom::tidy(cor.test(x = rescaled_auc, y = gdsc_auc, method = "pearson")), .by = c("lab_id", "model_name", "mut_dist"))
 
@@ -397,23 +402,26 @@ plot.hnscc.cl.inh <- function(cl.matches, pt.inhib, gdsc.inhib, cl.info) {
     mutate(star_levels = case_when(
       p.value < .001 ~ "***",
       p.value < .01 ~ "**",
-      p.value < .05 ~ "**",
+      p.value < .05 ~ "*",
       .default = ""
     ))
 
-  drug.matches <- inner_join(drug.matches, select(dm.cors, lab_id, model_name), by = c("lab_id", "model_name"))
-
+  drug.matches <- inner_join(drug.matches, 
+                             select(dm.cors, lab_id, model_name), 
+                             by = c("lab_id", "model_name"))
+  
   full.plot <- ggplot(data = drug.matches, mapping = aes(x = rescaled_auc, y = gdsc_auc)) +
     geom_point() +
     geom_smooth(formula = y ~ x, method = "lm", se = F) +
     geom_text(data = dm.cors, mapping = aes(x = .5, y = .15, label = paste0("r: ", round(estimate, 3), star_levels))) +
-    facet_wrap(~ lab_id + model_name, ncol = 2) +
+    facet_wrap(~ lab_id + model_name, nrow = 2) +
     xlab("HNSCC AUC") +
     ylab("GDSC AUC") +
     theme_classic() +
-    theme(text = element_text(family = "Helvetica", size = 12))
+    theme(text = element_text(family = "Helvetica", size = 12),
+          axis.text.x = element_text(angle = 45, hjust = 1))
 
-  ggsave(full.plot, file = "figures/full_inhib_by_cl.pdf", width = 4, height = 6.5)
+  ggsave(full.plot, file = "figures/full_inhib_by_cl.pdf", width = 9, height = 4.5)
 
 
   "figures/full_inhib_by_cl.pdf"

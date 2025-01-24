@@ -347,7 +347,7 @@ overlap.tcga.path.plots <- function(htome.summary, pc.paths, action.genes, drug.
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
     ) +
     ylab("Number of Inhibitors") +
-    xlab("TCGA Candidate therapeutic targets")
+    xlab("TCGA Candidate Therapeutic Targets")
 
   # Summarize the drug combinations
 
@@ -404,12 +404,12 @@ overlap.tcga.path.plots <- function(htome.summary, pc.paths, action.genes, drug.
     geom_tile(color = "black") +
     geom_text(mapping = aes(label = n)) +
     theme_classic() +
-    theme(text = element_text(family = "Helvetica", size = 12)) +
-    xlab("") +
-    ylab("") +
-    ggtitle("Pathways targeted by combinations")
+    theme(text = element_text(family = "Helvetica", size = 12),
+          axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+    xlab("Inhibitor 1 Pathways") +
+    ylab("Inhibitor 2 Pathways")
 
-  ggsave(p1 + p2 + p3, file = "figures/summary_of_targets.pdf", width = 13, height = 3.5)
+  ggsave(p1 + p2 + p3, file = "figures/summary_of_targets.pdf", width = 9, height = 3)
 
   "figures/summary_of_targets.pdf"
 }
