@@ -199,12 +199,16 @@ plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map,
   pt.list <- setNames(group_split(gs.alt.tbl), group_keys(gs.alt.tbl)$lab_id)
 
   pt.list <- pt.list[pt.stars$lab_id]
-
+  
+  if (length(pt.list) > 26){
+    stop("ERROR: Currently this function is limited to 26 patients due to labeling with the alphabet")
+  }
+  
   pdf(file = paste0("figures/",file.pref,"_response_cards.pdf"), width = file.width, height = file.height)
 
   for (pt_idx in seq_along(pt.list)) {
     message(names(pt.list)[pt_idx])
-    plot.response.card(pt.list[[pt_idx]], htome.mat, score.mat, inhib.map, file.width, file.height)
+    plot.response.card(pt.list[[pt_idx]], htome.mat, score.mat, inhib.map, file.width, file.height, add.letter = letters[pt_idx])
   }
 
   dev.off()
@@ -227,7 +231,9 @@ plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map,
 #'   one for the corresponding `plot_name`
 #' @param expected.height Expected plot width in inches (used for scaling the various plot components)
 #' @param expected.height Expected plot height in inches (used for scaling the various plot components)
-plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map, expected.width, expected.height) {
+#' @param add.letter If present and non-NULL add the corresponding text to the top left of the plot (meant for multi-panel figures)
+#' @returns Nothing is returned but a plot of the Response Card is produced as a side-effect
+plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map, expected.width, expected.height, add.letter=NULL) {
   cur.samp <- result.tbl$lab_id[1]
 
   # include target genes for drugs < -2
@@ -408,6 +414,10 @@ plot.response.card <- function(result.tbl, htome.mat, score.mat, inhib.map, expe
   decorate_annotation("Gene Score", {
     grid.text(label = ro.results$sig_stars, x = unit(ro.results$score - .25, "native"), y = unit(nrow(ro.results) - seq_along(ro.results$score) + 1, "native"), just = c(1, .75))
   })
+  
+  if ((missing(add.letter) || is.null(add.letter))==F){
+    grid.text(add.letter, x = 0.05, y = .975, gp = gpar(fontsize = 12))
+  }
 }
 
 #' Perform Random Walk with Restarts
@@ -503,7 +513,8 @@ plot.network.prop.bars <- function(np.tbl, file.pref="all") {
       scale_fill_manual(values = c(Mut = "purple", Amp = "red", Del = "blue"), guide="none") +
       geom_text(mapping = aes(label = combined_class, y = np_score + (max(np_score) * .1))) +
       theme_bw() +
-      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+            plot.margin = margin(t = .25, unit="inches")) +
       xlab("") +
       ylab("Network Propagation Score") +
       ggtitle(x$lab_id[1])
@@ -513,6 +524,8 @@ plot.network.prop.bars <- function(np.tbl, file.pref="all") {
 
   for (p in seq_along(plot.list)) {
     show(plot.list[[p]])
+    
+    grid::grid.text(letters[p], x = 0.05, y = 1, just = "top", gp = grid::gpar(fontsize = 13))
   }
 
   dev.off()
