@@ -280,10 +280,10 @@ plot.tcga.hnscc.me.overlap <- function(all.eigs) {
     geom_point(shape = 21) +
     scale_fill_manual(values = c("TCGA" = "grey", "HNSCC" = "purple")) +
     scale_alpha_manual(values = c("TCGA" = .25, "HNSCC" = 1)) +
-    facet_wrap(~module, scales = "free") +
+    facet_wrap(~sub("od", "", module), scales = "free") +
     theme_bw()
 
-  ggsave(p1, file = "figures/hnscc_tcga_me_comparison.pdf", width = 11, height = 7)
+  ggsave(p1, file = "figures/hnscc_tcga_me_comparison.pdf", width = 7, height = 4)
 
   "figures/hnscc_tcga_me_comparison.pdf"
 }
@@ -364,7 +364,7 @@ enrich.mods.hallmarks.plot <- function(mm, gmt.tbl) {
     xlab("") +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
-  ggsave(p1, file = "figures/mm_hallmark_fig.pdf", width = 7, height = 4.3)
+  ggsave(p1, file = "figures/mm_hallmark_fig.pdf", width = 6.5, height = 4)
 
   "figures/mm_hallmark_fig.pdf"
 }
@@ -402,10 +402,14 @@ correlate.me.with.clinical.plot <- function(clin, all.prs, all.subtypes, mm) {
     geom_tile() +
     geom_hline(yintercept = seq(.5, length(unique(med.pc1$subtype_best)) + .5, by = 1)) +
     geom_vline(xintercept = seq(.5, length(unique(med.pc1$mod_fac)) + .5, by = 1)) +
-    scale_fill_distiller(type = "div", palette = "PuOr", name = "Med. Eigengene") +
+    scale_fill_distiller(type = "div", palette = "PuOr", name = "Med. Eig.") +
     scale_y_discrete(expand = c(0, 0)) +
     scale_x_discrete(expand = c(0, 0)) +
     theme(
+      text=element_text(family = "Helvetica", size = 10),
+      legend.direction = "horizontal", 
+      legend.position = "bottom",
+      legend.box = "horizontal",
       axis.text.x = element_blank(),
       axis.title = element_blank(),
       axis.ticks.x = element_blank(),
@@ -466,11 +470,15 @@ correlate.me.with.clinical.plot <- function(clin, all.prs, all.subtypes, mm) {
     geom_tile() +
     geom_hline(yintercept = seq(.5, length(unique(sig.res$comparison)) + .5, by = 1)) +
     geom_vline(xintercept = seq(.5, length(unique(sig.res$module)) + .5, by = 1)) +
-    geom_text(mapping = aes(label = star_levels), color = "white", size = 8, vjust = .75) +
+    geom_text(mapping = aes(label = star_levels), color = "white", size = 4, vjust = .75) +
     scale_fill_distiller(type = "div", palette = "RdGy", name = "T Statistic") +
     scale_y_discrete(expand = c(0, 0)) +
     scale_x_discrete(expand = c(0, 0)) +
     theme(
+      text=element_text(family = "Helvetica", size = 10),
+      legend.direction = "horizontal", 
+      legend.position = "bottom",
+      legend.box = "horizontal",
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
       axis.title = element_blank(),
       axis.ticks.x = element_blank(),
@@ -494,7 +502,7 @@ correlate.me.with.clinical.plot <- function(clin, all.prs, all.subtypes, mm) {
   full.p
 
 
-  ggsave(full.p, file = "figures/clinical_vs_mes_hnscc.pdf", width = 6.3, height = 5)
+  ggsave(full.p, file = "figures/clinical_vs_mes_hnscc.pdf", width=3.25, height=4.5)#width = 6.3, height = 5)
 
   "figures/clinical_vs_mes_hnscc.pdf"
 }

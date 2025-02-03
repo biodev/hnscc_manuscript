@@ -159,14 +159,17 @@ plot.gs.summary <- function(gs.tbl, use.genes) {
   p1 <- ggplot(data = use.gs.tbl, mapping = aes(x = sample_fac, y = gene_fac, fill = level_fac)) +
     geom_tile(color = "black") +
     scale_fill_viridis_d(option = "G", direction = -1, name = "Sig. Category", begin = .25) +
-    geom_text(mapping = aes(label = combined_class, color = -log10(pval) > 2), size=3) +
+    geom_text(mapping = aes(label = combined_class, color = -log10(pval) > 2), size=2) +
     scale_color_manual(values = c(`TRUE` = "white", `FALSE` = "black"), guide = "none") +
     theme_classic() +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+    theme(
+      text = element_text(size=10, family = "Helvetica"),
+      axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
+      ) +
     xlab("") +
     ylab("")
 
-  ggsave(p1, file = "figures/tcga_actionable_gs.pdf", width = 5, height = 2.75)
+  ggsave(p1, file = "figures/tcga_actionable_gs.pdf", width = 3.75, height = 2.25)
 
   "figures/tcga_actionable_gs.pdf"
 }
@@ -513,14 +516,17 @@ plot.network.prop.bars <- function(np.tbl, file.pref="all") {
       scale_fill_manual(values = c(Mut = "purple", Amp = "red", Del = "blue"), guide="none") +
       geom_text(mapping = aes(label = combined_class, y = np_score + (max(np_score) * .1))) +
       theme_bw() +
-      theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
-            plot.margin = margin(t = .25, unit="inches")) +
+      theme(
+        axis.text = element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+        plot.margin = margin(t = .25, unit="inches")
+        ) +
       xlab("") +
       ylab("Network Propagation Score") +
       ggtitle(x$lab_id[1])
   })
 
-  pdf(paste0("figures/", file.pref, "_net_prop_results.pdf"), width = 4.5, height = 2.5)
+  pdf(paste0("figures/", file.pref, "_net_prop_results.pdf"), width = 3.25, height = 2.5)
 
   for (p in seq_along(plot.list)) {
     show(plot.list[[p]])

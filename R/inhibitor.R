@@ -314,7 +314,7 @@ overlap.tcga.path.plots <- function(htome.summary, pc.paths, action.genes, drug.
     geom_col(color = "black") +
     scale_fill_manual(values = pathway.pal, guide = "none") +
     theme_bw() +
-    theme(text = element_text(family = "Helvetica", size = 12)) +
+    theme(text = element_text(family = "Helvetica", size = 10)) +
     xlab("Number of Targeted Genes") +
     ylab("PanCancer Pathways")
 
@@ -343,7 +343,7 @@ overlap.tcga.path.plots <- function(htome.summary, pc.paths, action.genes, drug.
     scale_fill_manual(values = pathway.pal, guide = "none") +
     theme_bw() +
     theme(
-      text = element_text(family = "Helvetica", size = 12),
+      text = element_text(family = "Helvetica", size = 10),
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
     ) +
     ylab("Number of Inhibitors") +
@@ -404,12 +404,12 @@ overlap.tcga.path.plots <- function(htome.summary, pc.paths, action.genes, drug.
     geom_tile(color = "black") +
     geom_text(mapping = aes(label = n)) +
     theme_classic() +
-    theme(text = element_text(family = "Helvetica", size = 12),
+    theme(text = element_text(family = "Helvetica", size = 10),
           axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
     xlab("Inhibitor 1 Pathways") +
     ylab("Inhibitor 2 Pathways")
 
-  ggsave(p1 + p2 + p3, file = "figures/summary_of_targets.pdf", width = 9, height = 3)
+  ggsave(p1 + p2 + p3, file = "figures/summary_of_targets.pdf", width = 6.5, height = 2.5)
 
   "figures/summary_of_targets.pdf"
 }
@@ -490,23 +490,23 @@ combination.ratio.plot <- function(inhib, drug.paths) {
     )
 
   comb.plot <- ggplot(data = combo.summary, mapping = aes(y = estimate, x = name_fac, ymin = conf.low, ymax = conf.high)) +
-    geom_pointrange(size = .25, color = "purple") +
+    geom_pointrange(size = .1, color = "purple") +
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_text(mapping = aes(y = .5, label = star_level, vjust = ifelse(star_level == "N.S.", .5, .75)), angle = 90) +
     facet_grid(. ~ pathway, scales = "free_x", space = "free") +
     scale_color_discrete(name = "Significant") +
     theme_bw() +
-    ylab("log Combination Ratio") +
+    ylab("Log Combination Ratio") +
     xlab("") +
     theme(
-      text = element_text(family = "Helvetica", size = 12),
+      text = element_text(family = "Helvetica", size = 10),
       strip.background = element_blank(),
       strip.text.y = element_blank(),
       axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)
     ) +
     ylim(c(-1.25, .75))
 
-  ggsave(comb.plot, file = "figures/combination_ratio.pdf", width = 9, height = 2.5)
-
+  ggsave(comb.plot, file = "figures/combination_ratio.pdf", width = 6.5, height = 2.5)
+  
   "figures/combination_ratio.pdf"
 }

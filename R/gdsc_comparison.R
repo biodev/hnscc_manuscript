@@ -284,14 +284,14 @@ plot.cl.matches <- function(gdsc.cls, mut.mat, gdsc.mut.mat, cna.mat, gdsc.cna.m
     column_split = clust.res,
     column_title = NULL,
     show_heatmap_legend = F,
-    row_names_gp = gpar(fontsize = 12, fontfamily = "Helvetica"),
+    row_names_gp = gpar(fontsize = 10, fontfamily = "Helvetica"),
     column_names_gp = gpar(
-      fontsize = 12, fontfamily = "Helvetica",
+      fontsize = 10, fontfamily = "Helvetica",
       fontface = ifelse(grepl("\\d{5}", colnames(comb.mat)), "bold", "plain")
     )
   )
 
-  pdf(file = "figures/hnscc_gdsc_alt_heatmap.pdf", width = 8.8, height = 4.5)
+  pdf(file = "figures/hnscc_gdsc_alt_heatmap.pdf", width = 6.5, height = 3.5)
 
   draw(ht.m)
 
@@ -418,10 +418,10 @@ plot.hnscc.cl.inh <- function(cl.matches, pt.inhib, gdsc.inhib, cl.info) {
     xlab("HNSCC AUC") +
     ylab("GDSC AUC") +
     theme_classic() +
-    theme(text = element_text(family = "Helvetica", size = 12),
+    theme(text = element_text(family = "Helvetica", size = 10),
           axis.text.x = element_text(angle = 45, hjust = 1))
 
-  ggsave(full.plot, file = "figures/full_inhib_by_cl.pdf", width = 9, height = 4.5)
+  ggsave(full.plot, file = "figures/full_inhib_by_cl.pdf", width = 6.5, height = 4)
 
 
   "figures/full_inhib_by_cl.pdf"
