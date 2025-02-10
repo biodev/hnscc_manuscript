@@ -183,8 +183,8 @@ plot.gs.summary <- function(gs.tbl, use.genes) {
 #'
 #' @param gs.alt.tbl A `tibble` of combined Gene Score and alteration data as
 #'   output from [combine.gs.mut.cna.exprs.rppa()].
-#' @param htome.mat A drug x patient matrix as produced by [drug.by.pt.mat()]
-#' @param score.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
+#' @param htome.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
+#' @param score.mat A drug x patient matrix as produced by [drug.by.pt.mat()]
 #' @param inhib.map A `tibble` containing a column for `inhibitor` and
 #'   one for the corresponding `plot_name`
 #' @param file.pref Prefix of the output pdf (default 'all')
@@ -228,8 +228,8 @@ plot.all.response.cards <- function(gs.alt.tbl, htome.mat, score.mat, inhib.map,
 #'
 #' @param result.tbl A `tibble` of combined Gene Score and alteration data as
 #'   output from [combine.gs.mut.cna.exprs.rppa()].
-#' @param htome.mat A drug x patient matrix as produced by [drug.by.pt.mat()]
-#' @param score.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
+#' @param htome.mat A gene x drug matrix as produced by [gene.by.drug.mat()]
+#' @param score.mat A drug x patient matrix as produced by [drug.by.pt.mat()]
 #' @param inhib.map A `tibble` containing a column for `inhibitor` and
 #'   one for the corresponding `plot_name`
 #' @param expected.height Expected plot width in inches (used for scaling the various plot components)

@@ -6,6 +6,7 @@
 #' * `lab_id` Patient sample identifier
 #' @param values The corresponding column in `inhib` to use as the values for
 #'   the matrix.
+#' @returns A list of drug x patient matrices containing the specified value.
 drug.by.pt.mat <- function(inhib, values = "zscore") {
   inhib <- group_by(inhib, type)
   inhib.list <- setNames(group_split(inhib), group_keys(inhib)$type)
@@ -29,6 +30,7 @@ drug.by.pt.mat <- function(inhib, values = "zscore") {
 #' @param tome A `tibble` that contains columns for:
 #' * `Gene` Gene identifier
 #' * `inhibitor` Name of a drug
+#' @returns A gene x drug binary matrix
 gene.by.drug.mat <- function(tome) {
   tome <- mutate(tome, values = 1)
 
