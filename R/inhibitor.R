@@ -285,6 +285,94 @@ annotate.drugs.pathways <- function(inhib, htome.summary, pc.paths) {
   inhib.paths
 }
 
+#' Read in a Reactome GMT file
+#' 
+#' Read in and parse a Reactome GMT file, ensuring that the IDs are kept as 
+#' well as the pathway names.
+#' 
+#' @param gmt.file A Reactome GMT file downloaded from https://reactome.org/download-data
+#' 
+#' @returns A long `tibble` with columns for pathway, reactome_id and Gene with
+#'   one row for each gene of a pathway
+read.reactome.gmt <- function(gmt.file){
+  
+  file.lines <- readLines(gmt.file)
+  
+  path.names <- strsplit(file.lines, "\t") |>
+    sapply(function(x) x[1:2]) |>
+    t()
+  
+  colnames(path.names) <- c("pathway", "reactome_id")
+  
+  path.tbl <- bind_cols(
+    as_tibble(path.names),
+    lines = file.lines
+  ) |>
+    separate_longer_delim(cols=lines, delim="\t")
+  
+  path.tbl <- filter(path.tbl, pathway != lines & reactome_id != lines) |>
+    rename(Gene = "lines")
+  
+  path.tbl
+}
+
+#' Output a mapping between targeted genes as well as pathways from PanCancer and Reactome
+#'
+#' Note to simplify the output from Reactome, the pathways are limited to those related to
+#' cancer as well as signaling pathways
+#'
+#' @param htome.summary A `tibble` containing an inhibitor -> Gene mapping with
+#'   corresponding columns
+#' @param pc.paths A `tibble` containing a Gene -> pathway mapping with
+#'   corresponding columns
+#' @param react.paths A `tibble` containing a Gene -> pathway mapping along with
+#'   the corresponding Reactome IDs
+#' @returns Nothing but creates an Excel file with the mapping
+output.drug.target.pathways <- function(htome.summary, pc.paths, react.paths){
+  
+  #rough map between pancancer and reactome pathways
+  
+  react.pc.map <- c(
+    "NOTCH" = "Signaling by NOTCH1 in Cancer",
+    "Cell Cycle" = "Aberrant regulation of mitotic G1/S transition in cancer due to RB1 defects ",
+    "HIPPO" = "Signaling by Hippo",
+    "PI3K" = "PI3K/AKT Signaling in Cancer",
+    "RTK RAS" = "Signaling by Receptor Tyrosine Kinases"
+  )
+  
+  react.path.summary <- filter(react.paths, 
+                               grepl("[Cc]ancer", pathway) | 
+                               grepl("[Oo]nco", pathway) | 
+                               grepl("Signaling by", pathway)) %>%
+    summarize(reactome_pathways = paste(pathway, collapse=" ; "),
+                                  .by=Gene)
+  
+  pc.path.summary <- summarize(pc.paths, 
+                               pan_cancer_pathways = paste(pathway, collapse=" ; "),
+                               .by=Gene)
+  
+  htome.paths <- left_join(htome.summary, pc.path.summary, by="Gene")
+  
+  htome.paths <- left_join(htome.paths, react.path.summary, by="Gene")
+  
+  #order the reactome pathways so that the first one matches the pancancer pathway(s)
+  htome.paths <- mutate(htome.paths,
+                        reactome_pathways = mapply(function(pc.path, reac.paths){
+                          if (all(is.na(reac.paths)) ){
+                            NA_character_
+                          }else{
+                            
+                            is.path.match.to.pc <- reac.paths %in% react.pc.map[pc.path]
+                            
+                            paste(reac.paths[order(-is.path.match.to.pc)], collapse=" ; ")
+                          }
+                          
+                        }, pan_cancer_pathways, strsplit(reactome_pathways, " ; ")))
+  
+  openxlsx::write.xlsx(list(select(htome.paths, inhibitor, Gene, pan_cancer_pathways, reactome_pathways )), file="outputs/hnscc_inhib_genes_pathways.xlsx")
+  
+}
+
 #' Generate a combined set of plots displaying the relationship between drugs and pathways
 #'
 #' @param htome.summary A `tibble` containing an inhibitor -> Gene mapping with

@@ -18,7 +18,7 @@
     pivot_longer(cols = c("Age (Median)", "Age (# < 40)")) %>%
     pivot_wider(id_cols = name, names_from = {{ group.var }}, values_from = value)
 
-  gender.var <- .cat.summary(clin.data, {{ group.var }}, Gender)
+  hpv.var <- .cat.summary(clin.data, {{ group.var }}, hpv_fac)
 
   race.var <- .cat.summary(clin.data, {{ group.var }}, race_fac)
 
@@ -49,7 +49,7 @@
 
   # return in list for to facilitate highlighting in resulting excel spreadsheet
   list(
-    n.samps, age.var, gender.var, race.var, alc.var, smok.var, pak.var, pak.mean,
+    n.samps, age.var, hpv.var, race.var, alc.var, smok.var, pak.var, pak.mean,
     tis.var, path.var, path.t.var, path.n.var, one.year.var, five.year.var
   )
 }
@@ -112,7 +112,7 @@ make.clin.summary.table <- function(clin.data) {
     )
   )
 
-  hpv.sum.list <- .generate.clin.table(clin.data, hpv_fac)
+  hpv.sum.list <- .generate.clin.table(clin.data, Gender)
 
   # Create a highlighted workbook, adapted from:
   # https://stackoverflow.com/questions/71600719/addstyle-function-in-openxlsx-does-not-fill-cells-in-excel-spreadsheet-with-the

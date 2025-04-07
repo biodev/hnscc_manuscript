@@ -254,6 +254,22 @@ list(
     form.pancan.pathways("external/mmc3.xlsx", "external/Homo_sapiens.gene_info.gz"),
     packages = c("tidyverse", "openxlsx")
   ),
+  #https://reactome.org/download/current/ReactomePathways.gmt.zip
+  tar_target(
+    reactome_file,
+    "external/ReactomePathways.gmt",
+    format = "file"
+  ),
+  tar_target(
+    reactome_pathways,
+    read.reactome.gmt(reactome_file),
+    packages = "tidyverse"
+  ),
+  tar_target(
+    drug_targ_pathways_file,
+    output.drug.target.pathways(trgome, pancan_pathways, reactome_pathways, reactome_hier),
+    packages = c("tidyverse", "openxlsx", "igraph")
+  ),
   tar_target(
     drug_pathways,
     annotate.drugs.pathways(inhib, trgome, pancan_pathways),
